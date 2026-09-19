@@ -1,12 +1,12 @@
 # kvmd-alerts
 
-Big red banner across the top of the [PiKVM](https://pikvm.org/) video when the target
-machine plays an **isolated notification sound** — a Teams or Google Chat ping, a Meet or
-Teams incoming-call ring — after a long quiet stretch. Meetings and speech never trigger it.
+Red "🔔 Sound detected at HH:MM" bar across the top of the [PiKVM](https://pikvm.org/) video
+when the target machine goes from a long quiet stretch (60 s) to any sound — a Teams / Google
+Chat / Slack ping, an incoming-call ring, or someone starting to talk. It fires at the onset
+and re-arms only after another 60 s of quiet, so a meeting fires once when it starts.
 
 The detection runs on the audio hub that already taps each station's microphone
-(`pikvm-alert-detect`: a long quiet period, a short burst, quiet again; tonality
-tie-breaker). This package only carries the UI side:
+(`pikvm-alert-detect`, in the infra repo). This package only carries the UI side:
 
 - `alerts.css` and a banner `div` in `index.html`;
 - a marker-delimited block in `session.js` that subscribes to `/alerts/` with an
