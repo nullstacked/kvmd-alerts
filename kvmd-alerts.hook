@@ -1,0 +1,10 @@
+[Trigger]
+Type = Package
+Operation = Install
+Operation = Upgrade
+Target = kvmd
+
+[Action]
+Description = Applying kvmd-alerts patches...
+When = PostTransaction
+Exec = /usr/share/kvmd-alerts/apply-patches.sh

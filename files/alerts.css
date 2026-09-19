@@ -1,0 +1,52 @@
+/* kvmd-alerts — big red banner across the top of the video when the station's laptop
+   played an isolated notification sound (detected by pikvm-alert-detect on the audio hub). */
+
+:root {
+	--cs-alert-bg: #c62828;
+	--cs-alert-fg: #fff;
+	--cs-alert-font-size: 22px;
+	--cs-alert-shadow: 0 2px 12px rgba(0,0,0,0.6);
+}
+
+.kvm-alert-banner {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 100000;
+	background: var(--cs-alert-bg);
+	color: var(--cs-alert-fg);
+	font-family: sans-serif;
+	font-size: var(--cs-alert-font-size);
+	font-weight: bold;
+	text-align: center;
+	padding: 14px 48px 14px 16px;
+	box-shadow: var(--cs-alert-shadow);
+	cursor: pointer;
+	transform: translateY(-110%);
+	transition: transform 0.25s ease-out;
+	pointer-events: auto;
+}
+.kvm-alert-banner[data-shown="1"] {
+	transform: translateY(0);
+	animation: kvm-alert-pulse 1s ease-in-out 3;
+}
+@keyframes kvm-alert-pulse {
+	0%, 100% { filter: brightness(1); }
+	50% { filter: brightness(1.35); }
+}
+.kvm-alert-banner small {
+	display: block;
+	font-size: 60%;
+	font-weight: normal;
+	opacity: 0.85;
+	margin-top: 4px;
+}
+.kvm-alert-banner .kvm-alert-close {
+	position: absolute;
+	right: 14px;
+	top: 10px;
+	font-size: 26px;
+	line-height: 1;
+	opacity: 0.8;
+}

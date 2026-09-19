@@ -1,0 +1,15 @@
+post_install() {
+    echo ">>> Running kvmd-alerts patches..."
+    /usr/share/kvmd-alerts/apply-patches.sh
+}
+
+post_upgrade() {
+    echo ">>> Running kvmd-alerts patches..."
+    /usr/share/kvmd-alerts/apply-patches.sh
+}
+
+pre_remove() {
+    echo ">>> kvmd-alerts removed."
+    echo ">>> Run 'pacman -S kvmd' to restore original web files + nginx config,"
+    echo ">>> then 'systemctl restart kvmd-nginx'. /etc/kvmd/listen.conf is left in place."
+}
