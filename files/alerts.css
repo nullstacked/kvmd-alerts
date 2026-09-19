@@ -4,7 +4,7 @@
 :root {
 	--cs-alert-bg: #c62828;
 	--cs-alert-fg: #fff;
-	--cs-alert-font-size: 22px;
+	--cs-alert-font-size: 15px;
 	--cs-alert-shadow: 0 2px 12px rgba(0,0,0,0.6);
 }
 
@@ -20,7 +20,7 @@
 	font-size: var(--cs-alert-font-size);
 	font-weight: bold;
 	text-align: center;
-	padding: 14px 48px 14px 16px;
+	padding: 7px 40px 7px 12px;
 	box-shadow: var(--cs-alert-shadow);
 	cursor: pointer;
 	transform: translateY(-110%);
@@ -44,9 +44,9 @@
 }
 .kvm-alert-banner .kvm-alert-close {
 	position: absolute;
-	right: 14px;
-	top: 10px;
-	font-size: 26px;
+	right: 12px;
+	top: 6px;
+	font-size: 20px;
 	line-height: 1;
 	opacity: 0.8;
 }

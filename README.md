@@ -10,8 +10,8 @@ tie-breaker). This package only carries the UI side:
 
 - `alerts.css` and a banner `div` in `index.html`;
 - a marker-delimited block in `session.js` that subscribes to `/alerts/` with an
-  `EventSource` and shows the banner for 15 s per event (click to dismiss; the tab
-  title gets a bell too);
+  `EventSource` and shows the banner per event until you click it, move the mouse more than ~200 px,
+  or 60 s pass (the tab title gets a bell meanwhile);
 - an auth-gated `location /alerts/` in kvmd-nginx that reverse-proxies the SSE stream
   from `linux:8040/events/<station>` (`X-Accel-Buffering: no`, no proxy buffering).
 
@@ -19,7 +19,7 @@ Station name comes from `/etc/kvmd/listen.conf` (`STATION=<name>`), shared with
 [kvmd-listen](https://github.com/nullstacked/kvmd-listen). Inert without it.
 
 ```bash
-rw; pacman -U kvmd-alerts-1.0.0-1-any.pkg.tar.zst; ro
+rw; pacman -U kvmd-alerts-1.1.0-1-any.pkg.tar.zst; ro
 ```
 
 Re-applies itself after kvmd upgrades via an ALPM PostTransaction hook.

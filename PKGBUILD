@@ -1,6 +1,6 @@
 # Maintainer: nullstacked
 pkgname=kvmd-alerts
-pkgver=1.0.0
+pkgver=1.1.0
 pkgrel=1
 pkgdesc="Red banner on the PiKVM web UI when the target machine plays an isolated notification sound (Teams/Chat ping, incoming-call ring) - events from an audio-hub detector via nginx /alerts/"
 arch=('any')
