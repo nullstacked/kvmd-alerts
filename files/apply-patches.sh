@@ -144,6 +144,12 @@ block = (
     MARK + "\n\n"
     "location /alerts/ {\n"
     "\t# text/event-stream from pikvm-alert-detect on linux:8040 for this station.\n"
+    "\t# 1.3: no kvmd login check (a cross-origin EventSource from the snapshot\n"
+    "\t# dashboard carries no cookie) — the events are just 'station X had a chime\n"
+    "\t# at T', so source-network restriction is enough: LAN, tailnet, and\n"
+    "\t# gatewayserver (the public-path proxy, whose users already passed auth).\n"
+    "\tauth_request off;\n"
+    "\tallow 127.0.0.1; allow 192.168.100.0/24; allow 100.64.0.0/10; allow fd7a:115c:a1e0::/48; deny all;\n"
     "\t# Variable upstream + resolver (kvmd-nginx starts even if DNS/linux is down);\n"
     "\t# with a variable in proxy_pass the URI below is sent verbatim.\n"
     "\tresolver 192.168.100.132 192.168.100.129 valid=60s ipv6=off;\n"
@@ -162,8 +168,7 @@ block = (
     "\tadd_header X-Accel-Buffering \"no\" always;\n"
     "\t# 1.2: the snapshot dashboard (monitor.supportandtechnology.com) subscribes\n"
     "\t# cross-origin with credentials (IP auto-login / kvmd cookie).\n"
-    "\tadd_header Access-Control-Allow-Origin \"https://monitor.supportandtechnology.com\" always;\n"
-    "\tadd_header Access-Control-Allow-Credentials \"true\" always;\n"
+    "\tadd_header Access-Control-Allow-Origin \"*\" always;\n"
     "}\n\n"
 )
 if not os.path.exists(NGINX_CONF):

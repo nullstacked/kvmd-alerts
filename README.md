@@ -19,9 +19,9 @@ Station name comes from `/etc/kvmd/listen.conf` (`STATION=<name>`), shared with
 [kvmd-listen](https://github.com/nullstacked/kvmd-listen). Inert without it.
 
 ```bash
-rw; pacman -U kvmd-alerts-1.2.0-1-any.pkg.tar.zst; ro
+rw; pacman -U kvmd-alerts-1.3.0-1-any.pkg.tar.zst; ro
 ```
 
 Re-applies itself after kvmd upgrades via an ALPM PostTransaction hook.
 
-Since 1.2 the `/alerts/` location also sends CORS headers for `https://monitor.supportandtechnology.com`, so the snapshot dashboard can subscribe to every station's stream cross-origin (with credentials).
+Since 1.3 the `/alerts/` location is outside kvmd's login check (`auth_request off`) and restricted by source network instead (LAN, tailnet, the gateway proxy), with `Access-Control-Allow-Origin: *`, so the snapshot dashboard at monitor.supportandtechnology.com can subscribe to every station's stream cross-origin without cookies. The events carry only the station name and timings.
