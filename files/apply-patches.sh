@@ -75,10 +75,10 @@ path = os.path.join(WEB_DIR, "share", "js", "kvm", "session.js")
 if not os.path.exists(path):
     log("FAILED: session.js not found"); sys.exit(1)
 content = open(path).read()
-BEGIN = "\t/* kvmd-alerts:begin v1.2 */\n"
+BEGIN = "\t/* kvmd-alerts:begin v1.3 */\n"
 END   = "\t/* kvmd-alerts:end */\n"
 func_js = r"""
-	/* kvmd-alerts:begin v1.2 */
+	/* kvmd-alerts:begin v1.3 */
 	var __alertBannerInit = function() {
 		let el = document.getElementById("kvm-alert-banner");
 		if (!el || el.dataset.initialized) return;
@@ -100,7 +100,7 @@ func_js = r"""
 			count += 1;
 			var when = "";
 			try { when = new Date(ev.ts).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); } catch (e) {}
-			text.textContent = "🔔 Notification sound" + (when ? " at " + when : "");
+			text.textContent = "🔔 Sound detected" + (when ? " at " + when : "");
 			sub.textContent = "";
 			el.dataset.shown = "1"; origin = null;
 			base_title = document.title.replace(/^🔔 /, "");
