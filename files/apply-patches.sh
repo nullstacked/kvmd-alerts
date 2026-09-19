@@ -160,6 +160,10 @@ block = (
     "\tchunked_transfer_encoding off;\n"
     "\tadd_header Cache-Control \"no-store\" always;\n"
     "\tadd_header X-Accel-Buffering \"no\" always;\n"
+    "\t# 1.2: the snapshot dashboard (monitor.supportandtechnology.com) subscribes\n"
+    "\t# cross-origin with credentials (IP auto-login / kvmd cookie).\n"
+    "\tadd_header Access-Control-Allow-Origin \"https://monitor.supportandtechnology.com\" always;\n"
+    "\tadd_header Access-Control-Allow-Credentials \"true\" always;\n"
     "}\n\n"
 )
 if not os.path.exists(NGINX_CONF):
