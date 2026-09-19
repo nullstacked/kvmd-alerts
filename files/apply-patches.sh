@@ -75,10 +75,10 @@ path = os.path.join(WEB_DIR, "share", "js", "kvm", "session.js")
 if not os.path.exists(path):
     log("FAILED: session.js not found"); sys.exit(1)
 content = open(path).read()
-BEGIN = "\t/* kvmd-alerts:begin v1.1 */\n"
+BEGIN = "\t/* kvmd-alerts:begin v1.2 */\n"
 END   = "\t/* kvmd-alerts:end */\n"
 func_js = r"""
-	/* kvmd-alerts:begin v1.1 */
+	/* kvmd-alerts:begin v1.2 */
 	var __alertBannerInit = function() {
 		let el = document.getElementById("kvm-alert-banner");
 		if (!el || el.dataset.initialized) return;
@@ -99,9 +99,9 @@ func_js = r"""
 		var show = function(ev) {
 			count += 1;
 			var when = "";
-			try { when = new Date(ev.ts).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", second: "2-digit"}); } catch (e) {}
-			text.textContent = "🔔 Notification sound on " + (ev.station || "this station").toUpperCase() + (when ? " at " + when : "");
-			sub.textContent = (ev.bursts > 1 ? ev.bursts + " tones" : "1 tone") + ", " + (ev.longest_burst_s || "?") + " s, " + Math.round(ev.peak_db || 0) + " dB" + (count > 1 ? " — #" + count + " this session" : "");
+			try { when = new Date(ev.ts).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); } catch (e) {}
+			text.textContent = "🔔 Notification sound" + (when ? " at " + when : "");
+			sub.textContent = "";
 			el.dataset.shown = "1"; origin = null;
 			base_title = document.title.replace(/^🔔 /, "");
 			document.title = "🔔 " + base_title;
