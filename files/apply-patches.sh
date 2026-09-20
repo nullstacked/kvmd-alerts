@@ -75,10 +75,10 @@ path = os.path.join(WEB_DIR, "share", "js", "kvm", "session.js")
 if not os.path.exists(path):
     log("FAILED: session.js not found"); sys.exit(1)
 content = open(path).read()
-BEGIN = "\t/* kvmd-alerts:begin v1.3.4 */\n"
+BEGIN = "\t/* kvmd-alerts:begin v1.3.5 */\n"
 END   = "\t/* kvmd-alerts:end */\n"
 func_js = r"""
-	/* kvmd-alerts:begin v1.3.4 */
+	/* kvmd-alerts:begin v1.3.5 */
 	var __alertBannerInit = function() {
 		let el = document.getElementById("kvm-alert-banner");
 		if (!el || el.dataset.initialized) return;
@@ -86,17 +86,17 @@ func_js = r"""
 		// Subscribes to this station's isolated-notification-sound events
 		// (pikvm-alert-detect on the audio hub, proxied by kvmd-nginx at /alerts/)
 		// and shows a big red banner across the top of the video for a while.
-		var SHOW_MS = 60000, es = null, retry_ms = 2000, hide_timer = null, count = 0; // v1.3.4: hide on a click or after 60 s only — no mouse-travel dismissal (David 2026-09-20: a ping while working on the target machine kept dismissing the bar)
-		var base_title = document.title;
+		var SHOW_MS = 60000, FAST_MS = 8000, MIN_FLOOR_MS = 1000, es = null, retry_ms = 2000, hide_timer = null, count = 0; // v1.3.5: stays SHOW_MS (60 s) when the mouse is idle; the first mouse movement while it is up shortens it to FAST_MS (8 s) from when it appeared, floored at MIN_FLOOR_MS from now so it never vanishes instantly (David 2026-09-20: if the mouse is moving, dismiss it faster). Also hides on a click.
+		var base_title = document.title, shown_at = 0, fast = false;
 		var text = el.querySelector(".kvm-alert-text"), sub = el.querySelector(".kvm-alert-sub");
-		var hide = function() { el.dataset.shown = "0"; clearTimeout(hide_timer); document.title = base_title; };
+		var hide = function() { el.dataset.shown = "0"; clearTimeout(hide_timer); fast = false; document.title = base_title; };
 		var show = function(ev) {
 			count += 1;
 			var when = "";
 			try { when = new Date(ev.ts).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); } catch (e) {}
 			text.textContent = "🔔 Sound detected" + (when ? " at " + when : "");
 			sub.textContent = "";
-			el.dataset.shown = "1";
+			el.dataset.shown = "1"; shown_at = Date.now(); fast = false;
 			base_title = document.title.replace(/^🔔 /, "");
 			document.title = "🔔 " + base_title;
 			clearTimeout(hide_timer); hide_timer = setTimeout(hide, SHOW_MS);
@@ -108,6 +108,12 @@ func_js = r"""
 			es.onmessage = function(m) { try { show(JSON.parse(m.data)); } catch (e) {} };
 			es.onerror = function() { try { es.close(); } catch (e) {} es = null; setTimeout(connect, retry_ms); retry_ms = Math.min(retry_ms * 2, 30000); };
 		};
+		document.addEventListener("mousemove", function() {
+			if (el.dataset.shown !== "1" || fast) return;   // only the first movement shortens it
+			fast = true;
+			var delay = Math.max(FAST_MS - (Date.now() - shown_at), MIN_FLOOR_MS);
+			clearTimeout(hide_timer); hide_timer = setTimeout(hide, delay);
+		}, {passive: true});
 		el.addEventListener("click", hide);
 		// Sticky user activation is not needed: EventSource is not autoplay-gated.
 		connect();

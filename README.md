@@ -10,8 +10,8 @@ The detection runs on the audio hub that already taps each station's microphone
 
 - `alerts.css` and a banner `div` in `index.html`;
 - a marker-delimited block in `session.js` that subscribes to `/alerts/` with an
-  `EventSource` and shows the banner per event until you click it
-  or 60 s pass (the tab title gets a bell meanwhile);
+  `EventSource` and shows the banner per event until you click it, 60 s pass, or
+  (since 1.3.5) you move the mouse, which shortens it to ~8 s since it appeared — the tab title gets a bell meanwhile;
 - an auth-gated `location /alerts/` in kvmd-nginx that reverse-proxies the SSE stream
   from `linux:8040/events/<station>` (`X-Accel-Buffering: no`, no proxy buffering).
 
