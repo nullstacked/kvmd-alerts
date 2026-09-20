@@ -75,10 +75,10 @@ path = os.path.join(WEB_DIR, "share", "js", "kvm", "session.js")
 if not os.path.exists(path):
     log("FAILED: session.js not found"); sys.exit(1)
 content = open(path).read()
-BEGIN = "\t/* kvmd-alerts:begin v1.3 */\n"
+BEGIN = "\t/* kvmd-alerts:begin v1.3.3 */\n"
 END   = "\t/* kvmd-alerts:end */\n"
 func_js = r"""
-	/* kvmd-alerts:begin v1.3 */
+	/* kvmd-alerts:begin v1.3.3 */
 	var __alertBannerInit = function() {
 		let el = document.getElementById("kvm-alert-banner");
 		if (!el || el.dataset.initialized) return;
@@ -86,12 +86,13 @@ func_js = r"""
 		// Subscribes to this station's isolated-notification-sound events
 		// (pikvm-alert-detect on the audio hub, proxied by kvmd-nginx at /alerts/)
 		// and shows a big red banner across the top of the video for a while.
-		var SHOW_MS = 60000, MOVE_PX = 200, es = null, retry_ms = 2000, hide_timer = null, count = 0; // v1.1: hide after 60 s or >200 px of mouse travel
-		var origin = null, base_title = document.title;
+		var SHOW_MS = 60000, MOVE_PX = 200, GRACE_MS = 5000, es = null, retry_ms = 2000, hide_timer = null, count = 0; // v1.3.3: hide after 60 s, a click, or >200 px of mouse travel once GRACE_MS has passed (so a ping while you are working on the machine stays visible long enough to notice)
+		var origin = null, shown_at = 0, base_title = document.title;
 		var text = el.querySelector(".kvm-alert-text"), sub = el.querySelector(".kvm-alert-sub");
 		var hide = function() { el.dataset.shown = "0"; clearTimeout(hide_timer); origin = null; document.title = base_title; };
 		document.addEventListener("mousemove", function(e) {
 			if (el.dataset.shown !== "1") return;
+			if (Date.now() - shown_at < GRACE_MS) { origin = null; return; }  // v1.3.3: ignore cursor motion right after it appears
 			if (!origin) { origin = [e.clientX, e.clientY]; return; }
 			var dx = e.clientX - origin[0], dy = e.clientY - origin[1];
 			if (Math.sqrt(dx * dx + dy * dy) > MOVE_PX) hide();
@@ -102,7 +103,7 @@ func_js = r"""
 			try { when = new Date(ev.ts).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); } catch (e) {}
 			text.textContent = "🔔 Sound detected" + (when ? " at " + when : "");
 			sub.textContent = "";
-			el.dataset.shown = "1"; origin = null;
+			el.dataset.shown = "1"; origin = null; shown_at = Date.now();
 			base_title = document.title.replace(/^🔔 /, "");
 			document.title = "🔔 " + base_title;
 			clearTimeout(hide_timer); hide_timer = setTimeout(hide, SHOW_MS);
