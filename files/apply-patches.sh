@@ -75,10 +75,10 @@ path = os.path.join(WEB_DIR, "share", "js", "kvm", "session.js")
 if not os.path.exists(path):
     log("FAILED: session.js not found"); sys.exit(1)
 content = open(path).read()
-BEGIN = "\t/* kvmd-alerts:begin v1.3.5 */\n"
+BEGIN = "\t/* kvmd-alerts:begin v1.4.0 */\n"
 END   = "\t/* kvmd-alerts:end */\n"
 func_js = r"""
-	/* kvmd-alerts:begin v1.3.5 */
+	/* kvmd-alerts:begin v1.4.0 */
 	var __alertBannerInit = function() {
 		let el = document.getElementById("kvm-alert-banner");
 		if (!el || el.dataset.initialized) return;
@@ -94,11 +94,17 @@ func_js = r"""
 			count += 1;
 			var when = "";
 			try { when = new Date(ev.ts).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); } catch (e) {}
-			text.textContent = "🔔 Sound detected" + (when ? " at " + when : "");
+			// v1.4.0: the detector says what it heard — kind "call" (a ringing call: it
+			// always alerts, even mid-meeting after a pause) or "alert" (a message ping) —
+			// and sends a ready label ("📞 Sound detected: possible call"). Older detectors
+			// send neither: plain "Sound detected".
+			var kind = (ev.kind === "call" || ev.kind === "alert") ? ev.kind : "";
+			text.textContent = (ev.label || "🔔 Sound detected") + (when ? " at " + when : "");
 			sub.textContent = "";
+			el.dataset.kind = kind;
 			el.dataset.shown = "1"; shown_at = Date.now(); fast = false;
-			base_title = document.title.replace(/^🔔 /, "");
-			document.title = "🔔 " + base_title;
+			base_title = document.title.replace(/^(🔔|📞) /, "");
+			document.title = (kind === "call" ? "📞 " : "🔔 ") + base_title;
 			clearTimeout(hide_timer); hide_timer = setTimeout(hide, SHOW_MS);
 		};
 		var connect = function() {

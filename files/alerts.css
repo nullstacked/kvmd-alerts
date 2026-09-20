@@ -27,6 +27,10 @@
 	transition: transform 0.25s ease-out;
 	pointer-events: auto;
 }
+/* 1.4.0: a call (ring) is orange, a message ping stays red */
+.kvm-alert-banner[data-kind="call"] {
+	background: #e65100;
+}
 .kvm-alert-banner[data-shown="1"] {
 	transform: translateY(0);
 	animation: kvm-alert-pulse 1s ease-in-out 3;
