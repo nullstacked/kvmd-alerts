@@ -31,6 +31,22 @@
 .kvm-alert-banner[data-kind="call"] {
 	background: #e65100;
 }
+/* 1.5.0: your name being said is not an alarm — it is a summons. Blue, so it
+   reads as "someone wants you" rather than "something went wrong", and it is
+   distinguishable at a glance from the two sound colours. */
+.kvm-alert-banner[data-kind="name"] {
+	background: #1565c0;
+}
+/* The second line of a name banner is the answer, and is read rather than
+   glanced at: give it the room the sound-alert subtitle never needed. */
+.kvm-alert-banner[data-kind="name"] small {
+	font-size: 78%;
+	opacity: 1;
+	white-space: pre-wrap;
+	max-width: 70ch;
+	margin-left: auto;
+	margin-right: auto;
+}
 .kvm-alert-banner[data-shown="1"] {
 	transform: translateY(0);
 	animation: kvm-alert-pulse 1s ease-in-out 3;

@@ -75,10 +75,10 @@ path = os.path.join(WEB_DIR, "share", "js", "kvm", "session.js")
 if not os.path.exists(path):
     log("FAILED: session.js not found"); sys.exit(1)
 content = open(path).read()
-BEGIN = "\t/* kvmd-alerts:begin v1.4.0 */\n"
+BEGIN = "\t/* kvmd-alerts:begin v1.5.0 */\n"
 END   = "\t/* kvmd-alerts:end */\n"
 func_js = r"""
-	/* kvmd-alerts:begin v1.4.0 */
+	/* kvmd-alerts:begin v1.5.0 */
 	var __alertBannerInit = function() {
 		let el = document.getElementById("kvm-alert-banner");
 		if (!el || el.dataset.initialized) return;
@@ -86,11 +86,28 @@ func_js = r"""
 		// Subscribes to this station's isolated-notification-sound events
 		// (pikvm-alert-detect on the audio hub, proxied by kvmd-nginx at /alerts/)
 		// and shows a big red banner across the top of the video for a while.
-		var SHOW_MS = 60000, FAST_MS = 8000, MIN_FLOOR_MS = 1000, es = null, retry_ms = 2000, hide_timer = null, count = 0; // v1.3.5: stays SHOW_MS (60 s) when the mouse is idle; the first mouse movement while it is up shortens it to FAST_MS (8 s) from when it appeared, floored at MIN_FLOOR_MS from now so it never vanishes instantly (David 2026-09-20: if the mouse is moving, dismiss it faster). Also hides on a click.
+		var SHOW_MS = 60000, FAST_MS = 8000, MIN_FLOOR_MS = 1000, es = null, retry_ms = 2000, hide_timer = null, count = 0;
+		// v1.5.0: a name event ("your name was just said") holds longer and ignores
+		// the mouse rule. A sound alert shortens on movement because movement means
+		// you are already at the machine and have seen it; a name banner fills in
+		// its second line ~3 s later with what was actually said, and hiding at the
+		// 1 s floor would wipe the banner before its answer arrived.
+		var NAME_SHOW_MS = 120000, name_event = null; // v1.3.5: stays SHOW_MS (60 s) when the mouse is idle; the first mouse movement while it is up shortens it to FAST_MS (8 s) from when it appeared, floored at MIN_FLOOR_MS from now so it never vanishes instantly (David 2026-09-20: if the mouse is moving, dismiss it faster). Also hides on a click.
 		var base_title = document.title, shown_at = 0, fast = false;
 		var text = el.querySelector(".kvm-alert-text"), sub = el.querySelector(".kvm-alert-sub");
-		var hide = function() { el.dataset.shown = "0"; clearTimeout(hide_timer); fast = false; document.title = base_title; };
+		var hide = function() { el.dataset.shown = "0"; clearTimeout(hide_timer); fast = false; name_event = null; document.title = base_title; };
+		// v1.5.0: stage 2 of a name event, ~3 s behind stage 1 and carrying the same
+		// event_id — the recap's answer, or a retraction when nobody was actually
+		// addressing you (a video playing in the room, or a mishear). Only ever
+		// touches the banner it belongs to, so a sound alert in between wins the
+		// banner and the late answer is dropped rather than overwriting it.
+		var answer = function(ev) {
+			if (!name_event || ev.event_id !== name_event || el.dataset.shown !== "1") return;
+			if (ev.dismiss) { hide(); return; }
+			sub.textContent = ev.answer || ev.note || "";
+		};
 		var show = function(ev) {
+			if (ev.kind === "name" && ev.stage === "answer") { answer(ev); return; }
 			count += 1;
 			var when = "";
 			try { when = new Date(ev.ts).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); } catch (e) {}
@@ -98,14 +115,17 @@ func_js = r"""
 			// always alerts, even mid-meeting after a pause) or "alert" (a message ping) —
 			// and sends a ready label ("📞 Sound detected: possible call"). Older detectors
 			// send neither: plain "Sound detected".
-			var kind = (ev.kind === "call" || ev.kind === "alert") ? ev.kind : "";
+			var kind = (ev.kind === "call" || ev.kind === "alert" || ev.kind === "name") ? ev.kind : "";
 			text.textContent = (ev.label || "🔔 Sound detected") + (when ? " at " + when : "");
-			sub.textContent = "";
+			// A name banner opens with the words that triggered it, so one glance
+			// settles a mishear without waiting for the answer.
+			sub.textContent = (kind === "name" && ev.heard) ? "\u201c" + ev.heard + "\u201d" : "";
+			name_event = (kind === "name") ? (ev.event_id || null) : null;
 			el.dataset.kind = kind;
 			el.dataset.shown = "1"; shown_at = Date.now(); fast = false;
-			base_title = document.title.replace(/^(🔔|📞) /, "");
-			document.title = (kind === "call" ? "📞 " : "🔔 ") + base_title;
-			clearTimeout(hide_timer); hide_timer = setTimeout(hide, SHOW_MS);
+			base_title = document.title.replace(/^(🔔|📞|🗣️) /, "");
+			document.title = (kind === "call" ? "📞 " : kind === "name" ? "🗣️ " : "🔔 ") + base_title;
+			clearTimeout(hide_timer); hide_timer = setTimeout(hide, kind === "name" ? NAME_SHOW_MS : SHOW_MS);
 		};
 		var connect = function() {
 			try { if (es) es.close(); } catch (e) {}
@@ -116,6 +136,7 @@ func_js = r"""
 		};
 		document.addEventListener("mousemove", function() {
 			if (el.dataset.shown !== "1" || fast) return;   // only the first movement shortens it
+			if (el.dataset.kind === "name") return;         // v1.5.0: a summons waits for its answer
 			fast = true;
 			var delay = Math.max(FAST_MS - (Date.now() - shown_at), MIN_FLOOR_MS);
 			clearTimeout(hide_timer); hide_timer = setTimeout(hide, delay);
