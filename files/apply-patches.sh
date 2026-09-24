@@ -75,10 +75,10 @@ path = os.path.join(WEB_DIR, "share", "js", "kvm", "session.js")
 if not os.path.exists(path):
     log("FAILED: session.js not found"); sys.exit(1)
 content = open(path).read()
-BEGIN = "\t/* kvmd-alerts:begin v1.6.0 */\n"
+BEGIN = "\t/* kvmd-alerts:begin v1.6.1 */\n"
 END   = "\t/* kvmd-alerts:end */\n"
 func_js = r"""
-	/* kvmd-alerts:begin v1.6.0 */
+	/* kvmd-alerts:begin v1.6.1 */
 	var __alertBannerInit = function() {
 		let el = document.getElementById("kvm-alert-banner");
 		if (!el || el.dataset.initialized) return;
@@ -100,15 +100,20 @@ func_js = r"""
 		// were heard. Built here so index.html's banner markup stays the same.
 		var mk = function(tag, cls, parent) { var n = document.createElement(tag); n.className = cls; parent.appendChild(n); return n; };
 		var nm = mk("div", "kvm-name", el); el.insertBefore(nm, sub);
-		var nm_head = mk("span", "kvm-name-head", nm), nm_label = mk("span", "kvm-name-label", nm_head), nm_meta = mk("span", "kvm-name-meta", nm_head);
-		var nm_lead = mk("span", "kvm-name-lead", nm), nm_ctx = mk("span", "kvm-name-ctx", nm), nm_wait = mk("span", "kvm-name-wait", nm), nm_quote = mk("span", "kvm-name-quote", nm);
+		// v1.6.1: ONE line (David: "don't want it to take up much vertical space besides one
+		// line"): label · the ask, cut with an ellipsis · time. Context and the heard words
+		// open under it only while the pointer is over the card; the tooltip has it all.
+		var nm_row = mk("div", "kvm-name-row", nm), nm_label = mk("span", "kvm-name-head", nm_row);
+		var nm_lead = mk("span", "kvm-name-lead", nm_row), nm_meta = mk("span", "kvm-name-meta", nm_row);
+		var nm_more = mk("div", "kvm-name-more", nm), nm_ctx = mk("span", "kvm-name-ctx", nm_more), nm_wait = mk("span", "kvm-name-wait", nm_more), nm_quote = mk("span", "kvm-name-quote", nm_more);
 		var nm_when = "", nm_heard = "";
 		var nm_set = function(label, meta, lead, ctx, wait, quote) {
 			nm_label.textContent = label; nm_meta.textContent = meta; nm_lead.textContent = lead;
 			nm_ctx.textContent = ctx; nm_wait.textContent = wait; nm_quote.textContent = quote;
 			[nm_ctx, nm_wait, nm_quote].forEach(function(n) { n.style.display = n.textContent ? "" : "none"; });
+			el.title = [label.replace(/^\S+\s/, ""), lead, ctx, quote].filter(Boolean).join("\n") + "\n(click to dismiss)";
 		};
-		var hide = function() { el.dataset.shown = "0"; clearTimeout(hide_timer); fast = false; name_event = null; document.title = base_title; };
+		var hide = function() { el.dataset.shown = "0"; clearTimeout(hide_timer); fast = false; name_event = null; document.title = base_title; el.title = "Click to dismiss"; };
 		// v1.5.0: stage 2 of a name event, ~3 s behind stage 1 and carrying the same
 		// event_id — the recap's answer, or a retraction when nobody was actually
 		// addressing you (a video playing in the room, or a mishear). Only ever
@@ -153,7 +158,7 @@ func_js = r"""
 			if (kind === "name") {
 				nm_when = when; nm_heard = ev.heard ? "\u201c" + ev.heard + "\u201d" : "";
 				el.dataset.verdict = "";
-				nm_set("🗣️ Your name", when, nm_heard || "Your name was just said", "", "Working out what they want\u2026", "");
+				nm_set("🗣️ Your name", when + " \u00b7 working\u2026", nm_heard || "Your name was just said", "", "", "");
 			}
 			el.dataset.kind = kind;
 			el.dataset.shown = "1"; shown_at = Date.now(); fast = false;
