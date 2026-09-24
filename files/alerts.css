@@ -31,22 +31,6 @@
 .kvm-alert-banner[data-kind="call"] {
 	background: #e65100;
 }
-/* 1.5.0: your name being said is not an alarm — it is a summons. Blue, so it
-   reads as "someone wants you" rather than "something went wrong", and it is
-   distinguishable at a glance from the two sound colours. */
-.kvm-alert-banner[data-kind="name"] {
-	background: #1565c0;
-}
-/* The second line of a name banner is the answer, and is read rather than
-   glanced at: give it the room the sound-alert subtitle never needed. */
-.kvm-alert-banner[data-kind="name"] small {
-	font-size: 78%;
-	opacity: 1;
-	white-space: pre-wrap;
-	max-width: 70ch;
-	margin-left: auto;
-	margin-right: auto;
-}
 .kvm-alert-banner[data-shown="1"] {
 	transform: translateY(0);
 	animation: kvm-alert-pulse 1s ease-in-out 3;
@@ -70,3 +54,47 @@
 	line-height: 1;
 	opacity: 0.8;
 }
+
+/* 1.6.0: the name banner (blue since 1.5.0: a summons, not an alarm) is a compact card, not a full-width bar. The answer leads; the
+   header only says what kind of mention it was. Sound-alert banners are unchanged. */
+.kvm-alert-banner[data-kind="name"] {
+	left: 50%;
+	right: auto;
+	width: min(760px, calc(100vw - 32px));
+	transform: translate(-50%, -110%);
+	background: rgba(16, 32, 56, 0.96);
+	border: 1px solid rgba(120, 170, 255, 0.35);
+	border-top: none;
+	border-left: 4px solid #4a8dff;
+	border-radius: 0 0 10px 10px;
+	text-align: left;
+	font-weight: normal;
+	padding: 9px 40px 11px 14px;
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+}
+.kvm-alert-banner[data-kind="name"][data-shown="1"] {
+	transform: translate(-50%, 0);
+	animation: none;
+}
+.kvm-alert-banner[data-kind="name"][data-verdict="about"] { border-left-color: #9aa7b8; }
+.kvm-alert-banner[data-kind="name"] .kvm-alert-text { display: none; }
+.kvm-alert-banner[data-kind="name"] .kvm-name-head {
+	display: flex; gap: 8px; align-items: baseline;
+	font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #9fc2ff; font-weight: 700;
+}
+.kvm-alert-banner[data-kind="name"][data-verdict="about"] .kvm-name-head { color: #b8c2cf; }
+.kvm-alert-banner[data-kind="name"] .kvm-name-meta { color: #8795a8; font-weight: 500; letter-spacing: 0.02em; text-transform: none; }
+.kvm-alert-banner[data-kind="name"] .kvm-name-lead {
+	display: block; margin-top: 4px; font-size: 16px; line-height: 1.35; font-weight: 600; color: #fff;
+}
+.kvm-alert-banner[data-kind="name"] .kvm-name-ctx {
+	display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: #c9d4e3;
+}
+.kvm-alert-banner[data-kind="name"] .kvm-name-quote {
+	display: block; margin-top: 6px; font-size: 12px; font-style: italic; color: #8e9bb0;
+	white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.kvm-alert-banner[data-kind="name"] .kvm-name-wait { color: #8e9bb0; font-size: 12px; margin-top: 4px; display: block; }
+.kvm-alert-banner[data-kind="name"] small { display: none; }
+.kvm-alert-banner:not([data-kind="name"]) .kvm-name { display: none; }
+.kvm-alert-banner[data-kind="name"] .kvm-alert-close { top: 8px; font-size: 18px; color: #9fb0c8; }

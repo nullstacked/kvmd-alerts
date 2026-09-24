@@ -21,8 +21,16 @@ Station name comes from `/etc/kvmd/listen.conf` (`STATION=<name>`), shared with
 [kvmd-listen](https://github.com/nullstacked/kvmd-listen). Inert without it.
 
 ```bash
-rw; pacman -U kvmd-alerts-1.4.0-1-any.pkg.tar.zst; ro
+rw; pacman -U kvmd-alerts-1.6.0-1-any.pkg.tar.zst; ro
 ```
+
+**Name banner (1.5.0, redesigned 1.6.0).** When someone on the call says your name, a compact
+card slides down from the top centre instead of the full-width bar: a small header saying what
+kind of mention it is ("Your name" while waiting, then "Asking you" or "Talking about you"), the
+time and how long ago it was said, the ask itself as the lead line (the recap's "For David:" /
+"About David:" and "Context:" prefixes are stripped), the context under it, and the words that
+were heard in small italics. It holds 2 minutes and ignores mouse movement; a retraction hides
+it. Sound-alert banners are unchanged.
 
 Re-applies itself after kvmd upgrades via an ALPM PostTransaction hook.
 

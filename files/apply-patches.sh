@@ -75,10 +75,10 @@ path = os.path.join(WEB_DIR, "share", "js", "kvm", "session.js")
 if not os.path.exists(path):
     log("FAILED: session.js not found"); sys.exit(1)
 content = open(path).read()
-BEGIN = "\t/* kvmd-alerts:begin v1.5.0 */\n"
+BEGIN = "\t/* kvmd-alerts:begin v1.6.0 */\n"
 END   = "\t/* kvmd-alerts:end */\n"
 func_js = r"""
-	/* kvmd-alerts:begin v1.5.0 */
+	/* kvmd-alerts:begin v1.6.0 */
 	var __alertBannerInit = function() {
 		let el = document.getElementById("kvm-alert-banner");
 		if (!el || el.dataset.initialized) return;
@@ -95,6 +95,19 @@ func_js = r"""
 		var NAME_SHOW_MS = 120000, name_event = null; // v1.3.5: stays SHOW_MS (60 s) when the mouse is idle; the first mouse movement while it is up shortens it to FAST_MS (8 s) from when it appeared, floored at MIN_FLOOR_MS from now so it never vanishes instantly (David 2026-09-20: if the mouse is moving, dismiss it faster). Also hides on a click.
 		var base_title = document.title, shown_at = 0, fast = false;
 		var text = el.querySelector(".kvm-alert-text"), sub = el.querySelector(".kvm-alert-sub");
+		// v1.6.0: the name banner is a compact card (alerts.css): a small header saying what
+		// kind of mention it was, the answer as the lead line, its context, and the words that
+		// were heard. Built here so index.html's banner markup stays the same.
+		var mk = function(tag, cls, parent) { var n = document.createElement(tag); n.className = cls; parent.appendChild(n); return n; };
+		var nm = mk("div", "kvm-name", el); el.insertBefore(nm, sub);
+		var nm_head = mk("span", "kvm-name-head", nm), nm_label = mk("span", "kvm-name-label", nm_head), nm_meta = mk("span", "kvm-name-meta", nm_head);
+		var nm_lead = mk("span", "kvm-name-lead", nm), nm_ctx = mk("span", "kvm-name-ctx", nm), nm_wait = mk("span", "kvm-name-wait", nm), nm_quote = mk("span", "kvm-name-quote", nm);
+		var nm_when = "", nm_heard = "";
+		var nm_set = function(label, meta, lead, ctx, wait, quote) {
+			nm_label.textContent = label; nm_meta.textContent = meta; nm_lead.textContent = lead;
+			nm_ctx.textContent = ctx; nm_wait.textContent = wait; nm_quote.textContent = quote;
+			[nm_ctx, nm_wait, nm_quote].forEach(function(n) { n.style.display = n.textContent ? "" : "none"; });
+		};
 		var hide = function() { el.dataset.shown = "0"; clearTimeout(hide_timer); fast = false; name_event = null; document.title = base_title; };
 		// v1.5.0: stage 2 of a name event, ~3 s behind stage 1 and carrying the same
 		// event_id — the recap's answer, or a retraction when nobody was actually
@@ -104,7 +117,23 @@ func_js = r"""
 		var answer = function(ev) {
 			if (!name_event || ev.event_id !== name_event || el.dataset.shown !== "1") return;
 			if (ev.dismiss) { hide(); return; }
-			sub.textContent = ev.answer || ev.note || "";
+			// The recap answers "For David: <ask>" / "About David: <gist>", then "Context: …",
+			// ending "(29s ago)". Show the ask as the lead, without the prefixes.
+			var lines = String(ev.answer || ev.note || "").split("\n").map(function(x) { return x.trim(); }).filter(Boolean);
+			var ago = "", m, lead = "", ctx = [], verdict = ev.verdict || "";
+			if (lines.length && (m = lines[lines.length - 1].match(/\s*\((\d+\s*[smh] ago)\)\s*$/))) {
+				ago = m[1]; lines[lines.length - 1] = lines[lines.length - 1].slice(0, m.index).trim();
+			}
+			lines.forEach(function(ln, i) {
+				var p = ln.match(/^(for|about)\s+[^:]{1,30}:\s*/i), c = ln.match(/^context:\s*/i);
+				if (i === 0 && p) { verdict = p[1].toLowerCase() === "about" ? "about" : "asked"; lead = ln.slice(p[0].length); }
+				else if (c) ctx.push(ln.slice(c[0].length));
+				else if (!lead) lead = ln;
+				else ctx.push(ln);
+			});
+			el.dataset.verdict = verdict;
+			var label = verdict === "asked" ? "🗣️ Asking you" : verdict === "about" ? "🗣️ Talking about you" : "🗣️ Your name";
+			nm_set(label, nm_when + (ago ? " · " + ago : ""), lead || nm_heard, ctx.join(" "), "", lead ? nm_heard : "");
 		};
 		var show = function(ev) {
 			if (ev.kind === "name" && ev.stage === "answer") { answer(ev); return; }
@@ -119,8 +148,13 @@ func_js = r"""
 			text.textContent = (ev.label || "🔔 Sound detected") + (when ? " at " + when : "");
 			// A name banner opens with the words that triggered it, so one glance
 			// settles a mishear without waiting for the answer.
-			sub.textContent = (kind === "name" && ev.heard) ? "\u201c" + ev.heard + "\u201d" : "";
+			sub.textContent = "";
 			name_event = (kind === "name") ? (ev.event_id || null) : null;
+			if (kind === "name") {
+				nm_when = when; nm_heard = ev.heard ? "\u201c" + ev.heard + "\u201d" : "";
+				el.dataset.verdict = "";
+				nm_set("🗣️ Your name", when, nm_heard || "Your name was just said", "", "Working out what they want\u2026", "");
+			}
 			el.dataset.kind = kind;
 			el.dataset.shown = "1"; shown_at = Date.now(); fast = false;
 			base_title = document.title.replace(/^(🔔|📞|🗣️) /, "");
