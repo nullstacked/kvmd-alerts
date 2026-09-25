@@ -1,107 +1,88 @@
-/* kvmd-alerts — big red banner across the top of the video when the station's laptop
-   played an isolated notification sound (detected by pikvm-alert-detect on the audio hub). */
+/* kvmd-alerts — one-line banner across the top of the video (85% wide, centred).
+   1.7.0 (2026-09-24, David: "think of someone that has 8 screens open and is working on an
+   unrelated screen"): peripheral vision catches motion and brightness, not colour, so every
+   banner arrives with a flash and keeps a slow pulse while it is up.
+   - a mention (your name / asking you): solid dark red, 3 bright flashes, then a slow glow;
+   - everything else (sound, Teams/Slack/..., call, "about you"): a muted dark bar with an
+     accent edge; the whole bar flashes its accent twice on arrival, then a line underneath pulses;
+     a call keeps a gentle ring pulse. The label on the left carries the app's logo. */
 
-:root {
-	--cs-alert-bg: #c62828;
-	--cs-alert-fg: #fff;
-	--cs-alert-font-size: 15px;
-	--cs-alert-shadow: 0 2px 12px rgba(0,0,0,0.6);
-}
+/* the label's colour, animated with the bar so it stays readable while the bar flashes */
+@property --kvm-pc { syntax: "<color>"; inherits: true; initial-value: #f0b429; }
 
 .kvm-alert-banner {
+	--c: #f0b429;
 	position: fixed;
 	top: 0;
-	left: 0;
-	right: 0;
+	left: 7.5%;
+	right: 7.5%;
 	z-index: 100000;
-	background: var(--cs-alert-bg);
-	color: var(--cs-alert-fg);
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	height: 32px;
+	padding: 0 40px 0 14px;
+	box-sizing: border-box;
+	white-space: nowrap;
 	font-family: sans-serif;
-	font-size: var(--cs-alert-font-size);
-	font-weight: bold;
-	text-align: center;
-	padding: 7px 40px 7px 12px;
-	box-shadow: var(--cs-alert-shadow);
+	font-size: 16px;
+	font-weight: 600;
+	color: #e6ebf2;
+	background: rgba(24, 30, 40, 0.92);
+	border-left: 5px solid var(--c);
+	border-radius: 0 0 8px 8px;
+	box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
 	cursor: pointer;
-	transform: translateY(-110%);
+	transform: translateY(-120%);
 	transition: transform 0.25s ease-out;
 	pointer-events: auto;
 }
-/* 1.4.0: a call (ring) is orange, a message ping stays red */
-.kvm-alert-banner[data-kind="call"] {
-	background: #e65100;
-}
-.kvm-alert-banner[data-shown="1"] {
-	transform: translateY(0);
-	animation: kvm-alert-pulse 1s ease-in-out 3;
-}
-@keyframes kvm-alert-pulse {
-	0%, 100% { filter: brightness(1); }
-	50% { filter: brightness(1.35); }
-}
-.kvm-alert-banner small {
-	display: block;
-	font-size: 60%;
-	font-weight: normal;
-	opacity: 0.85;
-	margin-top: 4px;
-}
-.kvm-alert-banner .kvm-alert-close {
-	position: absolute;
-	right: 12px;
-	top: 6px;
-	font-size: 20px;
-	line-height: 1;
-	opacity: 0.8;
-}
+.kvm-alert-banner[data-shown="1"] { transform: translateY(0); }
+.kvm-alert-banner[data-kind="call"] { --c: #ff8a3d; --kvm-pc: #ff8a3d; }
+.kvm-alert-banner[data-kind="name"][data-verdict="about"] { --c: #ef9a9a; --kvm-pc: #ef9a9a; }
 
-/* 1.6.0: the name banner (blue since 1.5.0: a summons, not an alarm) is a compact card, not a full-width bar. The answer leads; the
-   header only says what kind of mention it was. Sound-alert banners are unchanged. */
-.kvm-alert-banner[data-kind="name"] {
-	left: 50%;
-	right: auto;
-	width: min(760px, calc(100vw - 32px));
-	transform: translate(-50%, -110%);
-	background: rgba(16, 32, 56, 0.96);
-	border: 1px solid rgba(120, 170, 255, 0.35);
-	border-top: none;
-	border-left: 4px solid #4a8dff;
-	border-radius: 0 0 10px 10px;
-	text-align: left;
-	font-weight: normal;
-	padding: 6px 34px 6px 12px;
-	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+/* muted arrival: the whole bar flashes its accent twice, then settles */
+.kvm-alert-banner[data-shown="1"]:not(.kvm-mention) { animation: kvm-arrive 0.6s ease-out 0s 2; }
+.kvm-alert-banner[data-shown="1"][data-kind="call"] { animation: kvm-arrive 0.6s ease-out 0s 2, kvm-ring 1.2s ease-in-out 1.2s infinite; }
+@keyframes kvm-arrive { 0% { background: var(--c); color: #111; --kvm-pc: #111; } 100% { background: rgba(24, 30, 40, 0.92); --kvm-pc: var(--c); } }
+@keyframes kvm-ring { 0%, 100% { background: rgba(24, 30, 40, 0.92); } 50% { background: rgba(120, 60, 20, 0.92); } }
+.kvm-alert-banner:not(.kvm-mention)::after {
+	content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+	background: var(--c); opacity: 0.25; border-radius: 0 0 8px 0;
 }
-.kvm-alert-banner[data-kind="name"][data-shown="1"] {
-	transform: translate(-50%, 0);
-	animation: none;
+.kvm-alert-banner[data-shown="1"]:not(.kvm-mention)::after { animation: kvm-line 3s ease-in-out 1.2s infinite; }
+@keyframes kvm-line { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+/* a mention: solid dark red, bigger, 3 bright flashes then a slow glow until dismissed */
+.kvm-alert-banner.kvm-mention {
+	height: 38px; font-size: 18px; font-weight: 700; color: #fff;
+	background: #a51d1d; border-left: none; box-shadow: 0 3px 14px rgba(0, 0, 0, 0.6);
 }
-.kvm-alert-banner[data-kind="name"][data-verdict="about"] { border-left-color: #9aa7b8; }
-.kvm-alert-banner[data-kind="name"] .kvm-alert-text { display: none; }
-/* 1.6.1: one line - label · ask (ellipsis) · time. The rest opens on hover. */
-.kvm-alert-banner[data-kind="name"] .kvm-name-row {
-	display: flex; gap: 10px; align-items: baseline; white-space: nowrap; min-width: 0;
+.kvm-alert-banner.kvm-mention[data-shown="1"] { animation: kvm-flash-r 0.5s ease-in-out 0s 3, kvm-glow-r 3s ease-in-out 1.5s infinite; }
+@keyframes kvm-flash-r { 0%, 100% { background: #a51d1d; } 50% { background: #ff3b30; } }
+@keyframes kvm-glow-r { 0%, 100% { background: #a51d1d; } 50% { background: #c62828; } }
+
+.kvm-alert-banner .kvm-b-pill {
+	flex: none; display: inline-flex; align-items: center; gap: 6px;
+	font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c);
+	color: var(--kvm-pc);
 }
-.kvm-alert-banner[data-kind="name"] .kvm-name-head {
-	flex: none; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #9fc2ff; font-weight: 700;
+.kvm-alert-banner.kvm-mention .kvm-b-pill { font-size: 13px; color: #fff; background: rgba(0, 0, 0, 0.28); padding: 3px 9px; border-radius: 4px; }
+.kvm-alert-banner .kvm-b-pill svg { width: 16px; height: 16px; flex: none; }
+.kvm-alert-banner.kvm-mention .kvm-b-pill svg { width: 18px; height: 18px; }
+.kvm-alert-banner .kvm-b-lead { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.kvm-alert-banner .kvm-b-lead q { quotes: "\201C" "\201D"; font-weight: 400; opacity: 0.92; }
+.kvm-alert-banner .kvm-b-meta { flex: none; font-size: 12px; font-weight: 600; color: #8e9aab; }
+.kvm-alert-banner.kvm-mention .kvm-b-meta { font-size: 14px; color: rgba(255, 255, 255, 0.85); }
+.kvm-alert-banner .kvm-alert-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 18px; line-height: 1; color: #8e9aab; }
+.kvm-alert-banner.kvm-mention .kvm-alert-close { font-size: 20px; color: rgba(255, 255, 255, 0.85); }
+.kvm-alert-banner .kvm-alert-text, .kvm-alert-banner .kvm-alert-sub { display: none; }
+
+/* a name banner's context and the words heard open under it while the pointer is over it */
+.kvm-alert-banner .kvm-b-more {
+	display: none; position: absolute; top: 100%; left: 0; right: 0; padding: 6px 14px 8px;
+	background: rgba(24, 30, 40, 0.96); border-radius: 0 0 8px 8px; white-space: normal;
+	font-size: 13px; font-weight: 400; color: #c9d4e3;
 }
-.kvm-alert-banner[data-kind="name"][data-verdict="about"] .kvm-name-head { color: #b8c2cf; }
-.kvm-alert-banner[data-kind="name"] .kvm-name-lead {
-	flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
-	font-size: 14px; font-weight: 600; color: #fff;
-}
-.kvm-alert-banner[data-kind="name"] .kvm-name-meta { flex: none; font-size: 11px; color: #8795a8; }
-.kvm-alert-banner[data-kind="name"] .kvm-name-more { display: none; }
-.kvm-alert-banner[data-kind="name"]:hover .kvm-name-more { display: block; }
-.kvm-alert-banner[data-kind="name"]:hover .kvm-name-lead { white-space: normal; }
-.kvm-alert-banner[data-kind="name"]:hover .kvm-name-row { white-space: normal; }
-.kvm-alert-banner[data-kind="name"] .kvm-name-ctx {
-	display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: #c9d4e3;
-}
-.kvm-alert-banner[data-kind="name"] .kvm-name-quote {
-	display: block; margin-top: 4px; font-size: 12px; font-style: italic; color: #8e9bb0;
-}
-.kvm-alert-banner[data-kind="name"] .kvm-name-wait { display: none; }
-.kvm-alert-banner[data-kind="name"] small { display: none; }
-.kvm-alert-banner:not([data-kind="name"]) .kvm-name { display: none; }
-.kvm-alert-banner[data-kind="name"] .kvm-alert-close { top: 5px; right: 10px; font-size: 16px; color: #9fb0c8; }
+.kvm-alert-banner:hover .kvm-b-more:not(:empty) { display: block; }
+.kvm-alert-banner .kvm-b-more i { display: block; margin-top: 4px; color: #8e9bb0; }

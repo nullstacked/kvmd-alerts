@@ -21,16 +21,26 @@ Station name comes from `/etc/kvmd/listen.conf` (`STATION=<name>`), shared with
 [kvmd-listen](https://github.com/nullstacked/kvmd-listen). Inert without it.
 
 ```bash
-rw; pacman -U kvmd-alerts-1.6.1-1-any.pkg.tar.zst; ro
+rw; pacman -U kvmd-alerts-1.7.0-1-any.pkg.tar.zst; ro
 ```
 
-**Name banner (1.5.0, redesigned 1.6.x).** When someone on the call says your name, a slim
-**one-line** card (about 28 px) slides down at the top centre instead of the full-width bar:
-the kind of mention ("Your name" while waiting, then "Asking you" or "Talking about you"), the
-ask itself cut with an ellipsis (the recap's "For David:" / "About David:" / "Context:"
-prefixes stripped), and the time + how long ago. Hovering opens the context and the words
-that were heard; the tooltip has everything. It holds 2 minutes and ignores mouse movement; a
-retraction hides it. Sound-alert banners are unchanged.
+**One-line banner (1.7.0).** Every banner is one line, 85% of the screen wide and centred, built
+for someone working on another of eight screens: peripheral vision catches motion and brightness,
+so each one arrives with a flash and keeps a slow pulse while it is up.
+
+- **A mention** (your name was said / someone is asking you, from pikvm-name-watch): solid dark
+  red, 38 px, bold 18 px, 3 bright flashes, then a slow glow until dismissed. It opens with the
+  words heard ("Your name · working…"), then the recap's ask replaces them ("Asking you · …",
+  prefixes stripped); hovering shows the context and the words heard. Holds 2 min, ignores the mouse.
+- **Everything else** is a muted dark bar (32 px) with an accent edge: the whole bar flashes its
+  accent twice, then a line underneath pulses every 3 s. Sound alerts are amber, calls orange (and
+  keep a gentle ring pulse), "About you" a soft red.
+- **The label carries the app's logo.** A sound starts as "Sound · Possible alert" (speaker) or
+  "Call · Possible incoming call" (phone); a few seconds later the detector's stage-2 `source`
+  event fills in "Teams · Rahul Jonnakuti: “…”", Slack, Outlook, Chat (a forwarded client chat
+  shows the client's name), Zoom, or "Teams call · Incoming call from …".
+- Sound banners hold 60 s; moving the mouse on the page closes one 8 s after it appeared; a click
+  closes any banner.
 
 Re-applies itself after kvmd upgrades via an ALPM PostTransaction hook.
 
