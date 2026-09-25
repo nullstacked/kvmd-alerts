@@ -273,9 +273,13 @@ block = (
     "\tchunked_transfer_encoding off;\n"
     "\tadd_header Cache-Control \"no-store\" always;\n"
     "\tadd_header X-Accel-Buffering \"no\" always;\n"
-    "\t# 1.2: the snapshot dashboard (monitor.supportandtechnology.com) subscribes\n"
-    "\t# cross-origin with credentials (IP auto-login / kvmd cookie).\n"
-    "\tadd_header Access-Control-Allow-Origin \"*\" always;\n"
+    "\t# 1.8.1: cross-origin readers limited to the snapshot dashboard. Since 1.7 the events carry\n"
+    "\t# sender names and message snippets, and with '*' any web page opened on the LAN (including\n"
+    "\t# a client-managed laptop) could read them. The PiKVM page itself is same-origin.\n"
+    "\tset $alerts_cors \"\";\n"
+    "\tif ($http_origin ~* \"^https://monitor\\.(supportandtechnology\\.com|dvolonn\\.workers\\.dev)$\") { set $alerts_cors $http_origin; }\n"
+    "\tadd_header Access-Control-Allow-Origin $alerts_cors always;\n"
+    "\tadd_header Vary Origin always;\n"
     "}\n\n"
 )
 if not os.path.exists(NGINX_CONF):
