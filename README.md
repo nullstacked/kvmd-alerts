@@ -21,7 +21,7 @@ Station name comes from `/etc/kvmd/listen.conf` (`STATION=<name>`), shared with
 [kvmd-listen](https://github.com/nullstacked/kvmd-listen). Inert without it.
 
 ```bash
-rw; pacman -U kvmd-alerts-1.7.0-1-any.pkg.tar.zst; ro
+rw; pacman -U kvmd-alerts-1.8.0-1-any.pkg.tar.zst; ro
 ```
 
 **One-line banner (1.7.0).** Every banner is one line, 85% of the screen wide and centred, built
@@ -41,6 +41,9 @@ so each one arrives with a flash and keeps a slow pulse while it is up.
   shows the client's name), Zoom, or "Teams call · Incoming call from …".
 - Sound banners hold 60 s; moving the mouse on the page closes one 8 s after it appeared; a click
   closes any banner.
+- **Feedback (1.8.0):** 👍 (useful) / 👎 (false alarm) next to ✕. The click is POSTed to the
+  page's own `/alerts/` (nginx forwards it to the detector as `/events/<station>`) and recorded in
+  the notification event log against the banner's event; clicking a banner away is recorded too.
 
 Re-applies itself after kvmd upgrades via an ALPM PostTransaction hook.
 
