@@ -47,4 +47,9 @@ so each one arrives with a flash and keeps a slow pulse while it is up.
 
 Re-applies itself after kvmd upgrades via an ALPM PostTransaction hook.
 
+**1.8.1:** cross-origin readers of `/alerts/` are limited to the monitor dashboard
+(`https://monitor.supportandtechnology.com`, `https://monitor.dvolonn.workers.dev`): since 1.7 the
+events carry sender names and message snippets, and `Access-Control-Allow-Origin: *` let any web page
+opened on the LAN read them. The PiKVM page itself is same-origin and unaffected.
+
 Since 1.3 the `/alerts/` location is outside kvmd's login check (`auth_request off`) and restricted by source network instead (LAN, tailnet, the gateway proxy), with `Access-Control-Allow-Origin: *`, so the snapshot dashboard at monitor.supportandtechnology.com can subscribe to every station's stream cross-origin without cookies. The events carry only the station name and timings.
