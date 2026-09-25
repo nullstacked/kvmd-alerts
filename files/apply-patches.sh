@@ -75,10 +75,10 @@ path = os.path.join(WEB_DIR, "share", "js", "kvm", "session.js")
 if not os.path.exists(path):
     log("FAILED: session.js not found"); sys.exit(1)
 content = open(path).read()
-BEGIN = "\t/* kvmd-alerts:begin v1.7.0 */\n"
+BEGIN = "\t/* kvmd-alerts:begin v1.8.0 */\n"
 END   = "\t/* kvmd-alerts:end */\n"
 func_js = r"""
-	/* kvmd-alerts:begin v1.7.0 */
+	/* kvmd-alerts:begin v1.8.0 */
 	var __alertBannerInit = function() {
 		let el = document.getElementById("kvm-alert-banner");
 		if (!el || el.dataset.initialized) return;
@@ -107,7 +107,32 @@ func_js = r"""
 		var mk = function(tag, cls) { var n = document.createElement(tag); n.className = cls; el.appendChild(n); return n; };
 		var close = el.querySelector(".kvm-alert-close");
 		var pill = mk("span", "kvm-b-pill"), lead = mk("span", "kvm-b-lead"), meta = mk("span", "kvm-b-meta"), more = mk("div", "kvm-b-more");
+		// v1.8.0: 👍 / 👎 feedback (notification-learning-plan.md). Posted to this page's own
+		// /alerts/ (nginx forwards it to pikvm-alert-detect as /events/<station>), recorded in the
+		// notification event log against this banner's event, never shown to anyone.
+		var fb = mk("span", "kvm-b-fb");
+		var up = document.createElement("button"), down = document.createElement("button");
+		up.className = "kvm-b-up"; up.textContent = "\ud83d\udc4d"; up.title = "Real: this alert was useful";
+		down.className = "kvm-b-down"; down.textContent = "\ud83d\udc4e"; down.title = "False alarm";
+		fb.appendChild(up); fb.appendChild(down);
 		if (close) el.appendChild(close);
+		var report = function(body) {
+			try {
+				body.event_id = cur_event; body.kind = el.dataset.kind || ""; body.page = "pikvm";
+				fetch("/alerts/", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body), keepalive: true}).catch(function() {});
+			} catch (e) {}
+		};
+		var vote = function(value) {
+			return function(e) {
+				e.stopPropagation();
+				if (!cur_event) { hide(); return; }
+				report({type: "feedback", value: value});
+				meta.textContent = value === "down" ? "thanks \u00b7 marked false alarm" : "thanks \u00b7 marked useful";
+				fb.style.visibility = "hidden";
+				clearTimeout(hide_timer); hide_timer = setTimeout(hide, 900);
+			};
+		};
+		up.addEventListener("click", vote("up")); down.addEventListener("click", vote("down"));
 		var set = function(logo, label, lead_nodes, meta_text, more_nodes) {
 			pill.innerHTML = LOGO[logo] || "";                 // static markup from the table above only
 			pill.appendChild(document.createTextNode(label));
@@ -118,7 +143,7 @@ func_js = r"""
 		};
 		var quote = function(t) { var q = document.createElement("q"); q.textContent = t; return q; };
 		var line = function(tag, t) { var n = document.createElement(tag); n.textContent = t; return n; };
-		var hide = function() { el.dataset.shown = "0"; clearTimeout(hide_timer); fast = false; cur_event = null; document.title = base_title; };
+		var hide = function() { el.dataset.shown = "0"; clearTimeout(hide_timer); fast = false; cur_event = null; document.title = base_title; fb.style.visibility = ""; };
 		var restart = function() { el.dataset.shown = "0"; void el.offsetWidth; el.dataset.shown = "1"; };   // re-runs the arrival flash
 		var hhmm = function(ts) { try { return new Date(ts).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}); } catch (e) { return ""; } };
 		var when = "", heard = "";
@@ -197,7 +222,7 @@ func_js = r"""
 			var delay = Math.max(FAST_MS - (Date.now() - shown_at), MIN_FLOOR_MS);
 			clearTimeout(hide_timer); hide_timer = setTimeout(hide, delay);
 		}, {passive: true});
-		el.addEventListener("click", hide);
+		el.addEventListener("click", function() { if (cur_event) report({type: "banner", action: "dismissed"}); hide(); });
 		connect();
 		window.addEventListener("beforeunload", function() { try { if (es) es.close(); } catch (e) {} });
 	};

@@ -86,3 +86,11 @@
 }
 .kvm-alert-banner:hover .kvm-b-more:not(:empty) { display: block; }
 .kvm-alert-banner .kvm-b-more i { display: block; margin-top: 4px; color: #8e9bb0; }
+
+/* 1.8.0: 👍 / 👎 feedback, just left of the close mark */
+.kvm-alert-banner .kvm-b-fb { flex: none; display: inline-flex; gap: 4px; margin-right: 6px; }
+.kvm-alert-banner .kvm-b-fb button {
+	font-size: 14px; line-height: 1; padding: 2px 5px; border: 1px solid rgba(255, 255, 255, 0.18);
+	border-radius: 5px; background: rgba(0, 0, 0, 0.18); cursor: pointer; opacity: 0.75; color: inherit;
+}
+.kvm-alert-banner .kvm-b-fb button:hover { opacity: 1; background: rgba(255, 255, 255, 0.14); }
